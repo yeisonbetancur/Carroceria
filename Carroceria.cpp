@@ -7,7 +7,7 @@
 using namespace std;
 
 struct Car{
-	char placa[6];
+	char placa[7];
 	char marca[15];
 	char modelo[20];
 	int year;
@@ -28,7 +28,7 @@ void menu(){
 	
 }
 
-bool checkPlaca(char placa[6]){
+bool checkPlaca(char placa[7]){
 	Car car;
 	ifstream file("carro.dat", ios::binary);
     if (!file) {
@@ -45,40 +45,54 @@ bool checkPlaca(char placa[6]){
 }
 
 void registrar(){
-	Car car;
-	ofstream file("carro.dat", ios::binary | ios::app);
+    Car car;
+    ofstream file("carro.dat", ios::binary | ios::app);
     if (!file) {
         cerr << "Error al abrir el archivo." << endl;
         return;
     }
-    cout<<"Ingresa la placa del vehiculo(debe ser unica)\n";
 
-	cin.getline(car.placa, 6);
-	if(checkPlaca(car.placa)==0){
-		cout<<"La placa del vehiculo ya esta registrada";
-		file.close();
-		return;
-	}
-		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Ingresa la placa del vehiculo (5 caracteres, sin espacios): ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Limpiar buffer antes de leer
+    cin.getline(car.placa, 7);
 
-	cout<<"Ingresa la marca del vehiculo\n";
-	cin.getline(car.marca, 15);
-	cout<<"Ingresa el modelo del vehiculo\n";
-	cin.getline(car.modelo, 20);
-	cout<<"Ingresa el año del modelo del vehiculo\n";
-	cin>>car.year;
-	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout<<"Ingresa el color del vehiculo\n";
-	cin.getline(car.color, 15);
-	cout<<"Ingresa el tipo del vehiculo(1 para propio, 0 para Consignado)\n";
-	cin>>car.tipo;
-	cout<<"Ingresa el valor del vehiculo\n";
-	cin>>car.valor;
-	car.estado=1;
-	file.write(reinterpret_cast<const char*>(&car), sizeof(Car));
-	file.close();
-	cout<<"Vehiculo ingresado correctamente\n";
-	
+    if (strlen(car.placa) != 6) {
+        cout << "Error: La placa debe tener exactamente 6 caracteres.\n";
+        file.close();
+        return;
+    }
+
+    if (checkPlaca(car.placa)) {
+        cout << "La placa del vehiculo ya esta registrada.\n";
+        file.close();
+        return;
+    }
+
+    cout << "Ingresa la marca del vehiculo: ";
+    cin.getline(car.marca, 15);
+
+    cout << "Ingresa el modelo del vehiculo: ";
+    cin.getline(car.modelo, 20);
+
+    cout << "Ingresa el año del modelo del vehiculo: ";
+    cin >> car.year;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Ingresa el color del vehiculo: ";
+    cin.getline(car.color, 15);
+
+    cout << "Ingresa el tipo del vehiculo (1 para propio, 0 para consignado): ";
+    cin >> car.tipo;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Ingresa el valor del vehiculo: ";
+    cin >> car.valor;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    car.estado = 1;
+    file.write(reinterpret_cast<const char*>(&car), sizeof(Car));
+    file.close();
+    cout << "Vehiculo ingresado correctamente.\n";
 }
 
 
@@ -88,7 +102,7 @@ void printCar(Car car){
 	cout<<"\nModelo: "<<car.modelo;
 	cout<<"\nanho de lanzamiento: "<<car.year;
 	cout<<"\nColor: "<<car.color;
-	cout<<"\nTipo: "<<car.modelo?"Propio":"Consignado";
+	cout<<"\nTipo: "<<car.tipo?"Propio":"Consignado";
 	cout<<"\nValor: "<<car.valor;
 	cout<<"\nEstado: "<<car.estado?"Activo":"Inactivo";
 }
@@ -123,7 +137,7 @@ void consultarPrecio(){
     cout<<"Ingresa el valor maximo del vehiculo";
     cin>>max;
 	 while (file.read(reinterpret_cast<char*>(&car), sizeof(Car))) {
-        if (car.valor>=min ||car.valor<=max ) {
+        if (car.valor>=min && car.valor<=max ) {
             printCar(car);
         }
     }
@@ -152,20 +166,21 @@ void consultar(){
 	cout<<"Ingresa el tipo de consulta que vas a realizar\n";
 	cout<<"1. Marca 2. Rango de precio 3. Tipo \n";
 	cin>>x;
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	switch(x){
-		case 1: consultarMarca();
-		case 2: consultarPrecio();
-		case 3:consultarTipo();
+		case 1: consultarMarca();break;
+		case 2: consultarPrecio();break;
+		case 3:consultarTipo();break;
 	}
 }
 
 void modificar(){
 	Car car;
 	bool ask;
-	char placa[6];
+	char placa[7];
 	cout<<"Ingresa la placa del vehiculo";
 	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cin.getline(placa,6);
+	cin.getline(placa,7);
 	fstream file("carro.dat", ios::binary | ios::in | ios::out);
     
     if (!file) {
@@ -198,33 +213,26 @@ void modificar(){
 }
 void eliminar(){
 	Car car;
-	char placa[6];
+	char placa[7];
 	cout<<"Ingresa la placa del vehiculo";
 	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cin.getline(placa,6);
+	cin.getline(placa,7);
 	fstream file("carro.dat", ios::binary | ios::in | ios::out);
     
     if (!file) {
         cerr << "Error al abrir el archivo." << endl;
         return;
     }
-    if (strcmp(car.placa, placa) == 0){
-        if(car.estado){
-        	car.estado=0;
-           	file.seekp(-static_cast<int>(sizeof(Car)), ios::cur);
-           	file.write(reinterpret_cast<const char*>(&car), sizeof(Car));
-           	file.close();
-            cout << "Producto desactivado con exito." << endl;
-		}else{
-        	car.estado=1;
-           	file.seekp(-static_cast<int>(sizeof(Car)), ios::cur);
-           	file.write(reinterpret_cast<const char*>(&car), sizeof(Car));
-           	file.close();
-            cout << "Producto activado con exito." << endl;
-		}
-		
-		   	
+    while (file.read(reinterpret_cast<char*>(&car), sizeof(Car))) {
+        if (strcmp(car.placa, placa) == 0) {
+            car.estado = !car.estado; // Alternar entre activo/inactivo
+            file.seekp(-static_cast<int>(sizeof(Car)), ios::cur);
+            file.write(reinterpret_cast<const char*>(&car), sizeof(Car));
+            cout << "Estado cambiado con éxito.\n";
+            break;
+        }
 	}
+	file.close();
 }
 int main(){
 	int x;
@@ -240,3 +248,5 @@ int main(){
 		}
 	} while (x!=5);
 }
+
+
